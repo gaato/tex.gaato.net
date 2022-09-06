@@ -83,6 +83,6 @@ func handlerFunc(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	http.HandleFunc("/", handlerFunc)
+	http.HandleFunc("/api", handlerFunc)
 	log.Fatal(http.ListenAndServe(":9000", nil))
 }
