@@ -48,9 +48,9 @@ func handlerFunc(w http.ResponseWriter, r *http.Request) {
 		cmd = exec.Command("docker", "run", "--rm", "-i", "tex", "texpdf.py")
 	case "png":
 		if req.Plain {
-			cmd = exec.Command("docker", "run", "--rm", "-i", "tex", "tex.py")
-		} else {
 			cmd = exec.Command("docker", "run", "--rm", "-i", "tex", "tex.py", "-p")
+		} else {
+			cmd = exec.Command("docker", "run", "--rm", "-i", "tex", "tex.py")
 		}
 	default:
 		w.WriteHeader(http.StatusBadRequest)
