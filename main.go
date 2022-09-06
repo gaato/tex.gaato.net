@@ -58,12 +58,7 @@ func handlerFunc(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	cmd.Stdin = strings.NewReader(req.Code)
-	out, e := cmd.Output()
-	if e != nil {
-		fmt.Println(e)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+	out, _ := cmd.Output()
 	var res ResponseStruct
 	switch cmd.ProcessState.ExitCode() {
 	case 0:
