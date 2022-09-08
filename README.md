@@ -11,7 +11,7 @@ $ go run main.go
 
 ### Request
 
-```json
+```
 {
     "type": Union["png", "pdf"],
     "plain": bool,
@@ -21,7 +21,7 @@ $ go run main.go
 
 ### Response
 
-```json
+```
 {
     "status": int,
     "result": string,
