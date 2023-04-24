@@ -1,5 +1,7 @@
 # tex.gaato.net
 
+**The API is not open to the public now.**
+
 Web API for LaTeX
 
 ```
