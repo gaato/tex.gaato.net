@@ -84,7 +84,7 @@ app.post('/render/svg', async (req, res) => {
 });
 
 function handleRenderingError(error, res) {
-  if (error.message.startsWith('LaTeX syntax error')) {
+  if (error.message.startsWith('LaTeX error:')) {
     return res.status(400).send(error.message);
   }
   console.error(error);
