@@ -1,6 +1,6 @@
 # tex.gaato.net
 
-The LaTeX Rendering API provides endpoints to render LaTeX strings as SVG or PNG images.
+tex.gaato.net provides endpoints to render LaTeX strings as SVG or PNG images.
 
 ## Endpoints
 
