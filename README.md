@@ -1,43 +1,43 @@
 # tex.gaato.net
 
-**The API is not open to the public now.**
+The LaTeX Rendering API provides endpoints to render LaTeX strings as SVG or PNG images.
 
-Web API for LaTeX
+## Endpoints
 
-```
-$ docker build -t tex ./container # takes a lot of time
-$ go run main.go
-```
+### POST `/render/png`
 
-## POST /api
+Renders a LaTeX string as a PNG image.
 
-### Request
+#### Request Parameters
 
-```
-{
-    "type": Union["png", "pdf"],
-    "plain": bool,
-    "code": string
-}
-```
+| Parameter | Type   | Description                   |
+|-----------|--------|-------------------------------|
+| latex     | string | LaTeX string to be rendered   |
 
-### Response
+#### Response
 
-```
-{
-    "status": int,
-    "result": string,
-    "error": string
-}
- ```
- 
- ### status
- 
- - 0: Success
- - 1: Rendering error
- - 2: Timeout
- 
- ### result
- 
- Result is encoded in base64.
- 
+- **200 OK**
+  - `image/png`: PNG image
+- **400 Bad Request**
+  - `text/plain`: Error message if the LaTeX string is missing or if there's a LaTeX syntax error
+- **500 Internal Server Error**
+  - `text/plain`: Error message if any other error occurs
+
+### POST `/render/svg`
+
+Renders a LaTeX string as an SVG image.
+
+#### Request Parameters
+
+| Parameter | Type   | Description                   |
+|-----------|--------|-------------------------------|
+| latex     | string | LaTeX string to be rendered   |
+
+#### Response
+
+- **200 OK**
+  - `image/svg+xml`: SVG image
+- **400 Bad Request**
+  - `text/plain`: Error message if the LaTeX string is missing or if there's a LaTeX syntax error
+- **500 Internal Server Error**
+  - `text/plain`: Error message if any other error occurs
