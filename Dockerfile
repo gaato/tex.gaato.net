@@ -1,14 +1,17 @@
-FROM node:18-alpine
+FROM denoland/deno:alpine-1.37.1
+
+RUN apk --no-cache add font-noto-cjk-extra npm
 
 WORKDIR /usr/src/app
 
-RUN apk --no-cache add font-noto-cjk-extra
-
-COPY package*.json ./
-RUN npm install
-
 COPY . .
+
+RUN deno cache --node-modules-dir server.ts
+
+RUN npm --prefix node_modules/sharp i
+
+RUN apk del --purge npm
 
 EXPOSE 3000
 
-CMD [ "node", "server.js" ]
+CMD [ "deno", "run", "--node-modules-dir", "--allow-read", "--allow-env", "--allow-ffi", "--allow-net", "server.ts" ]
