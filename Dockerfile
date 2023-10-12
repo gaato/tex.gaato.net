@@ -10,8 +10,6 @@ RUN deno cache --node-modules-dir server.ts
 
 RUN npm --prefix node_modules/sharp i
 
-RUN apk del --purge npm
-
 EXPOSE 3000
 
 CMD [ "deno", "run", "--node-modules-dir", "--allow-read", "--allow-env", "--allow-ffi", "--allow-net", "server.ts" ]
