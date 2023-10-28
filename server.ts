@@ -4,7 +4,7 @@ import { SVG } from "npm:mathjax-full/js/output/svg.js";
 import { liteAdaptor } from "npm:mathjax-full/js/adaptors/liteAdaptor.js";
 import { RegisterHTMLHandler } from "npm:mathjax-full/js/handlers/html.js";
 import { AllPackages } from "npm:mathjax-full/js/input/tex/AllPackages.js";
-import { DOMParser } from "https://deno.land/x/deno_dom@v0.1.38/deno-dom-wasm.ts";
+import { DOMParser } from "https://esm.sh/linkedom@0.16.1";
 // @deno-types="npm:@types/express"
 import { default as express, Response } from "npm:express";
 // @deno-types="npm:@types/body-parser"
@@ -40,12 +40,12 @@ function convertToSvg(latex: string) {
       const errorTitle = svgTag.match(/title="([^"]+)"/)![1];
       throw new Error(errorTitle);
     }
-    const dom = new DOMParser().parseFromString(svgTag, "text/html")!;
-    const textElements = dom.getElementsByTagName("text");
-    textElements.forEach((text) => {
-      text.setAttribute("font-family", "Noto Serif CJK JP, serif");
-    });
-    const updatedSvgTag = dom.querySelector("svg")!.outerHTML;
+    const document = new DOMParser().parseFromString(svgTag, "image/svg+xml")!;
+    const textElements = document.getElementsByTagName("text");
+    textElements.forEach((text) =>
+      text.setAttribute("font-family", "Noto Serif CJK JP, serif")
+    );
+    const updatedSvgTag = document.querySelector("svg")!.outerHTML;
 
     return updatedSvgTag;
   } catch (error) {
