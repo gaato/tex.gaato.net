@@ -1,1 +1,10 @@
-/node_modules
+**
+!prisma/**
+!src/**
+!test/**
+!.tool-versions
+!nest-cli.json
+!package.json
+!pnpm-lock.yaml
+!bun.lockb
+!tsconfig*

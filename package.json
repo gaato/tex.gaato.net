@@ -1,0 +1,25 @@
+{
+  "name": "tex.gaato.net",
+  "module": "src/index.ts",
+  "type": "module",
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "express": "^4.18.2",
+    "jsdom": "^22.1.0",
+    "linkedom": "^0.16.1",
+    "mathjax": "^3.2.2",
+    "mathjax-full": "^3.2.2",
+    "sharp": "^0.32.5"
+  },
+  "trustedDependencies": [
+    "body-parser",
+    "sharp"
+  ],
+  "devDependencies": {
+    "@types/express": "^4.17.20",
+    "bun-types": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

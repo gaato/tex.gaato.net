@@ -1,16 +1,13 @@
-import { mathjax } from "npm:mathjax-full/js/mathjax.js";
-import { TeX } from "npm:mathjax-full/js/input/tex.js";
-import { SVG } from "npm:mathjax-full/js/output/svg.js";
-import { liteAdaptor } from "npm:mathjax-full/js/adaptors/liteAdaptor.js";
-import { RegisterHTMLHandler } from "npm:mathjax-full/js/handlers/html.js";
-import { AllPackages } from "npm:mathjax-full/js/input/tex/AllPackages.js";
-import { DOMParser } from "https://esm.sh/linkedom@0.16.1";
-// @deno-types="npm:@types/express"
-import { default as express, Response } from "npm:express";
-// @deno-types="npm:@types/body-parser"
-import bodyParser from "npm:body-parser";
-// @deno-types="npm:@types/sharp"
-import sharp from "npm:sharp";
+import { mathjax } from "mathjax-full/js/mathjax.js";
+import { TeX } from "mathjax-full/js/input/tex.js";
+import { SVG } from "mathjax-full/js/output/svg.js";
+import { liteAdaptor } from "mathjax-full/js/adaptors/liteAdaptor.js";
+import { RegisterHTMLHandler } from "mathjax-full/js/handlers/html.js";
+import { AllPackages } from "mathjax-full/js/input/tex/AllPackages.js";
+import { DOMParser } from "linkedom";
+import { default as express, Response } from "express";
+import bodyParser from "body-parser";
+import sharp from "sharp";
 
 const app = express();
 const port = 3000;
@@ -98,7 +95,7 @@ app.post("/render/svg", (req, res) => {
   }
 });
 
-function handleRenderingError(error: Error, res: Response) {
+function handleRenderingError(error: any, res: Response) {
   if (error.message.startsWith("LaTeX error:")) {
     return res.status(400).send(error.message);
   }
