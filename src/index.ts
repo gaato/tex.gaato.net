@@ -38,7 +38,7 @@ function convertToSvg(latex: string) {
     const document = new DOMParser().parseFromString(svgTag, "image/svg+xml")!;
     const textElements = document.getElementsByTagName("text");
     textElements.forEach((text) =>
-      text.setAttribute("font-family", "Noto Serif CJK JP, serif"),
+      text.setAttribute("font-family", "Noto Serif CJK JP, serif")
     );
     const updatedSvgTag = document.querySelector("svg")!.outerHTML;
 
@@ -71,9 +71,7 @@ app.post("/render/png", async (req, res) => {
       .png()
       .toBuffer();
 
-    res.status(200);
-    res.setHeader("Content-Type", "image/png");
-    res.send(image);
+    res.status(200).setHeader("Content-Type", "image/png").send(image);
   } catch (error: any) {
     handleRenderingError(error, res);
   }
@@ -87,9 +85,7 @@ app.post("/render/svg", (req, res) => {
     }
 
     const svgString = convertToSvg(latex);
-    res.status(200);
-    res.setHeader("Content-Type", "image/svg+xml");
-    res.send(svgString);
+    res.status(200).setHeader("Content-Type", "image/svg+xml").send(svgString);
   } catch (error) {
     handleRenderingError(error, res);
   }
