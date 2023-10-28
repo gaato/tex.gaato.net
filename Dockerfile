@@ -22,7 +22,7 @@ FROM oven/bun:alpine
 WORKDIR /app
 RUN apk --no-cache add font-noto-cjk-extra libstdc++
 COPY --from=builder /app/node_modules /app/node_modules
-COPY . .
+COPY src src
 EXPOSE 3000
 
 CMD [ "bun", "run", "src/index.ts" ]

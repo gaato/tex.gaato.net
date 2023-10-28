@@ -45,7 +45,7 @@ function convertToSvg(latex: string) {
     const updatedSvgTag = document.querySelector("svg")!.outerHTML;
 
     return updatedSvgTag;
-  } catch (error) {
+  } catch (error: any) {
     throw new Error(`LaTeX error: ${error.message}`);
   }
 }
@@ -75,7 +75,7 @@ app.post("/render/png", async (req, res) => {
 
     res.writeHead(200, { "Content-Type": "image/png" });
     res.end(image, "binary");
-  } catch (error) {
+  } catch (error: any) {
     handleRenderingError(error, res);
   }
 });
