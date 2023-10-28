@@ -63,7 +63,7 @@ app.post("/render/png", async (req, res) => {
     const svgString = convertToSvg(latex);
     const padding = 20; // 余白のサイズ
 
-    const image = await sharp(new TextEncoder().encode(svgString))
+    const image: Uint8Array = await sharp(new TextEncoder().encode(svgString))
       .resize({ height: 100 })
       .flatten({ background: { r: 255, g: 255, b: 255 } })
       .extend({
@@ -76,8 +76,8 @@ app.post("/render/png", async (req, res) => {
       .png()
       .toBuffer();
 
-    res.contentType("image/png");
-    res.send(image);
+    res.writeHead(200, { "Content-Type": "image/png" });
+    res.end(image, "binary");
   } catch (error) {
     handleRenderingError(error, res);
   }
