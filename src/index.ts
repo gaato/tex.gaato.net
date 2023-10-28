@@ -5,14 +5,12 @@ import { liteAdaptor } from "mathjax-full/js/adaptors/liteAdaptor.js";
 import { RegisterHTMLHandler } from "mathjax-full/js/handlers/html.js";
 import { AllPackages } from "mathjax-full/js/input/tex/AllPackages.js";
 import { DOMParser } from "linkedom";
-import { default as express, Response } from "express";
-import bodyParser from "body-parser";
+import server from "bunrest";
 import sharp from "sharp";
+import { BunResponse } from "bunrest/src/server/response";
 
-const app = express();
+const app = server();
 const port = 3000;
-
-app.use(bodyParser.json());
 
 const adaptor = liteAdaptor();
 RegisterHTMLHandler(adaptor);
@@ -40,7 +38,7 @@ function convertToSvg(latex: string) {
     const document = new DOMParser().parseFromString(svgTag, "image/svg+xml")!;
     const textElements = document.getElementsByTagName("text");
     textElements.forEach((text) =>
-      text.setAttribute("font-family", "Noto Serif CJK JP, serif")
+      text.setAttribute("font-family", "Noto Serif CJK JP, serif"),
     );
     const updatedSvgTag = document.querySelector("svg")!.outerHTML;
 
@@ -52,7 +50,7 @@ function convertToSvg(latex: string) {
 
 app.post("/render/png", async (req, res) => {
   try {
-    const latex = req.body.latex;
+    const latex = (req.body as { [key: string]: any })["latex"];
     if (!latex) {
       return res.status(400).send("LaTeX string is required.");
     }
@@ -73,8 +71,9 @@ app.post("/render/png", async (req, res) => {
       .png()
       .toBuffer();
 
-    res.writeHead(200, { "Content-Type": "image/png" });
-    res.end(image, "binary");
+    res.status(200);
+    res.setHeader("Content-Type", "image/png");
+    res.send(image);
   } catch (error: any) {
     handleRenderingError(error, res);
   }
@@ -82,20 +81,21 @@ app.post("/render/png", async (req, res) => {
 
 app.post("/render/svg", (req, res) => {
   try {
-    const latex = req.body.latex;
+    const latex = (req.body as { [key: string]: any })["latex"];
     if (!latex) {
       return res.status(400).send("LaTeX string is required.");
     }
 
     const svgString = convertToSvg(latex);
-    res.contentType("image/svg+xml");
+    res.status(200);
+    res.setHeader("Content-Type", "image/svg+xml");
     res.send(svgString);
   } catch (error) {
     handleRenderingError(error, res);
   }
 });
 
-function handleRenderingError(error: any, res: Response) {
+function handleRenderingError(error: any, res: BunResponse) {
   if (error.message.startsWith("LaTeX error:")) {
     return res.status(400).send(error.message);
   }
