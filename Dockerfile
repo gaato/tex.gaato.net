@@ -1,6 +1,6 @@
 # pnpm image definition
-FROM node:18 as pnpm
-RUN curl -f https://get.pnpm.io/v6.16.js | node - add --global pnpm
+FROM node:18-slim as pnpm
+RUN npm i -g pnpm@8
 
 # Caching of NPM packages
 FROM pnpm as fetcher
