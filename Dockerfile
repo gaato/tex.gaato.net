@@ -1,14 +1,28 @@
-FROM node:18-alpine
+# pnpm image definition
+FROM node:18-slim as pnpm
+RUN npm i -g pnpm@8
 
-WORKDIR /usr/src/app
+# Caching of NPM packages
+FROM pnpm as fetcher
+WORKDIR /app
+COPY pnpm-lock.yaml .
+RUN pnpm fetch --prod --frozen-lockfile
 
-RUN apk --no-cache add font-noto-cjk-extra
+# Install of NPM packages
+FROM pnpm as builder
+WORKDIR /app
+COPY --from=fetcher /root/.local/share/pnpm/store/v3 /root/.local/share/pnpm/store/v3
+COPY --from=fetcher /app/node_modules /app/node_modules
+COPY --from=fetcher /app/pnpm-lock.yaml /app/pnpm-lock.yaml
+COPY package.json .
+RUN pnpm install --offline --prod --frozen-lockfile
 
-COPY package*.json ./
-RUN npm install
-
-COPY . .
-
+# Production image: Using Bun as a runner
+FROM oven/bun:alpine
+WORKDIR /app
+RUN apk --no-cache add font-noto-cjk-extra libstdc++
+COPY --from=builder /app/node_modules /app/node_modules
+COPY src src
 EXPOSE 3000
 
-CMD [ "node", "server.js" ]
+CMD [ "bun", "run", "src/index.ts" ]
