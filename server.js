@@ -58,7 +58,7 @@ app.post('/render/png', async (req, res) => {
     const padding = 20; // 余白のサイズ
 
     const image = await sharp(Buffer.from(svgString))
-      .resize({ height: 100 })
+      .resize({ height: 500 })
       .flatten({ background: { r: 255, g: 255, b: 255 } })
       .extend({ top: padding, bottom: padding, left: padding, right: padding, background: { r: 255, g: 255, b: 255, alpha: 1 } }) // 余白を追加
       .png()
