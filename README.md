@@ -2,6 +2,41 @@
 
 tex.gaato.net provides endpoints to render LaTeX strings as SVG or PNG images.
 
+## Runtime
+
+- Node.js v24+
+- TypeScript
+- MathJax v4.1.0
+
+## Setup
+
+```bash
+pnpm install
+```
+
+This project enforces dependency build-script policy in [pnpm-workspace.yaml](pnpm-workspace.yaml).
+If a new dependency requires install scripts, explicitly review and allow it there.
+
+## Development
+
+```bash
+pnpm dev
+```
+
+## Production
+
+```bash
+pnpm build
+pnpm start
+```
+
+## CI
+
+```bash
+pnpm install --frozen-lockfile
+pnpm build
+```
+
 ## Endpoints
 
 ### POST `/render/png`
