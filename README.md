@@ -55,7 +55,7 @@ Set the following repository secrets before using it:
 
 ## Endpoints
 
-### POST `/render/svg`
+### POST `/render`
 
 Renders a LaTeX string as an SVG image.
 

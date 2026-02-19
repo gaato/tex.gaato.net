@@ -58,7 +58,7 @@ LaTeX 文字列を PNG 画像としてレンダリングします。
 - **500 Internal Server Error**
   - `text/plain`: その他のエラーが発生した場合のエラーメッセージ
 
-### POST `/render/svg`
+### POST `/render`
 
 LaTeX 文字列を SVG 画像としてレンダリングします。
 

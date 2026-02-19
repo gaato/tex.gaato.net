@@ -26,7 +26,7 @@ export default {
   async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url);
 
-    if (url.pathname !== '/render/svg') {
+    if (url.pathname !== '/render') {
       return textResponse(404, 'Not Found');
     }
 
