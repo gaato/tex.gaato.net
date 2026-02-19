@@ -20,3 +20,6 @@ declare module 'mathjax/output/svg.js' {
 declare module 'mathjax/adaptors/liteDOM.js' {
   export function liteAdaptor(options?: Record<string, unknown>): unknown;
 }
+
+declare module 'mathjax/startup.js';
+declare module 'mathjax/tex-svg.js';
