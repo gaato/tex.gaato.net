@@ -1,4 +1,4 @@
-name = "tex-gaato-net"
+name = "tex"
 main = "dist/main.js"
 compatibility_date = "2026-02-18"
 
