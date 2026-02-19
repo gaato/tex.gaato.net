@@ -1,67 +1,59 @@
-import Fastify from 'fastify';
-import { z } from 'zod';
-import { renderPng, renderSvg } from './math-renderer.js';
+import { renderSvg } from './math-renderer.js';
 
-const app = Fastify({ logger: true });
-const port = Number(process.env.PORT ?? 3000);
-const bodySchema = z.object({
-  latex: z.string().min(1)
-});
+type RenderRequest = {
+  latex?: unknown;
+};
 
-app.post('/render/svg', async (request, reply) => {
-  const parsed = bodySchema.safeParse(request.body);
-
-  if (!parsed.success) {
-    return reply.status(400).type('text/plain').send('LaTeX string is required.');
-  }
-
-  try {
-    const svg = await renderSvg(parsed.data.latex);
-    return reply.type('image/svg+xml').send(svg);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    if (message.startsWith('LaTeX error:')) {
-      return reply.status(400).type('text/plain').send(message);
+function textResponse(status: number, message: string): Response {
+  return new Response(message, {
+    status,
+    headers: {
+      'content-type': 'text/plain; charset=utf-8'
     }
-
-    request.log.error(error);
-    return reply
-      .status(500)
-      .type('text/plain')
-      .send('An error occurred while rendering the LaTeX string.');
-  }
-});
-
-app.post('/render/png', async (request, reply) => {
-  const parsed = bodySchema.safeParse(request.body);
-
-  if (!parsed.success) {
-    return reply.status(400).type('text/plain').send('LaTeX string is required.');
-  }
-
-  try {
-    const image = await renderPng(parsed.data.latex);
-    return reply.type('image/png').send(image);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    if (message.startsWith('LaTeX error:')) {
-      return reply.status(400).type('text/plain').send(message);
-    }
-
-    request.log.error(error);
-    return reply
-      .status(500)
-      .type('text/plain')
-      .send('An error occurred while rendering the LaTeX string.');
-  }
-});
-
-app
-  .listen({ port, host: '0.0.0.0' })
-  .then(() => {
-    app.log.info(`Server is running at http://localhost:${port}`);
-  })
-  .catch((error) => {
-    app.log.error(error);
-    process.exit(1);
   });
+}
+
+async function parseRequestBody(request: Request): Promise<RenderRequest | null> {
+  try {
+    const body = (await request.json()) as RenderRequest;
+    return body;
+  } catch {
+    return null;
+  }
+}
+
+export default {
+  async fetch(request: Request): Promise<Response> {
+    const url = new URL(request.url);
+
+    if (url.pathname !== '/render/svg') {
+      return textResponse(404, 'Not Found');
+    }
+
+    if (request.method !== 'POST') {
+      return textResponse(405, 'Method Not Allowed');
+    }
+
+    const body = await parseRequestBody(request);
+    if (!body || typeof body.latex !== 'string' || body.latex.trim().length === 0) {
+      return textResponse(400, 'LaTeX string is required.');
+    }
+
+    try {
+      const svg = await renderSvg(body.latex);
+      return new Response(svg, {
+        status: 200,
+        headers: {
+          'content-type': 'image/svg+xml; charset=utf-8'
+        }
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      if (message.startsWith('LaTeX error:')) {
+        return textResponse(400, message);
+      }
+
+      return textResponse(500, 'An error occurred while rendering the LaTeX string.');
+    }
+  }
+};

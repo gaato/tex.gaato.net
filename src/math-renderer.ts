@@ -1,36 +1,60 @@
-import { createRequire } from 'node:module';
-import sharp from 'sharp';
+import { MathJax, mathjax } from 'mathjax/core.js';
+import { TeX } from 'mathjax/input/tex.js';
+import { SVG } from 'mathjax/output/svg.js';
+import { liteAdaptor } from 'mathjax/adaptors/liteDOM.js';
 
-const require = createRequire(import.meta.url);
-
-type MathJaxApi = {
-  init: (config: unknown) => Promise<unknown>;
-  tex2svg: (latex: string, options: Record<string, unknown>) => unknown;
-  startup: {
-    adaptor: {
-      serializeXML: (node: unknown) => string;
-    };
-  };
+type MathJaxDocument = {
+  convert: (latex: string, options?: Record<string, unknown>) => unknown;
 };
 
-let mathJaxPromise: Promise<MathJaxApi> | null = null;
+type MathJaxAdaptor = {
+  outerHTML: (node: unknown) => string;
+};
 
-async function getMathJax(): Promise<MathJaxApi> {
-  if (!mathJaxPromise) {
-    if (!(globalThis as { MathJax?: object }).MathJax) {
-      (globalThis as { MathJax?: object }).MathJax = {};
+type MathJaxContext = {
+  document: MathJaxDocument;
+  adaptor: MathJaxAdaptor;
+};
+
+let mathJaxContext: MathJaxContext | null = null;
+
+function getMathJax(): MathJaxContext {
+  if (!mathJaxContext) {
+    const adaptor = liteAdaptor();
+    const registerHtmlHandler = (
+      MathJax as {
+        _?: {
+          handlers?: {
+            html_ts?: {
+              RegisterHTMLHandler?: (adaptor: unknown) => void;
+            };
+          };
+        };
+      }
+    )._?.handlers?.html_ts?.RegisterHTMLHandler;
+
+    if (typeof registerHtmlHandler !== 'function') {
+      throw new Error('MathJax HTML handler is unavailable.');
     }
 
-    const mathJax = require('mathjax/node-main.cjs') as MathJaxApi;
+    registerHtmlHandler(adaptor);
 
-    mathJaxPromise = mathJax
-      .init({
-        loader: { load: ['input/tex', 'output/svg'] }
-      })
-      .then(() => mathJax);
+    const input = new TeX({
+      packages: ['base', 'ams']
+    });
+    const output = new SVG({
+      fontCache: 'none'
+    });
+
+    const document = mathjax.document('', {
+      InputJax: input,
+      OutputJax: output
+    }) as MathJaxDocument;
+
+    mathJaxContext = { document, adaptor: adaptor as MathJaxAdaptor };
   }
 
-  return mathJaxPromise;
+  return mathJaxContext;
 }
 
 function getSvgFromMathJaxOutput(output: string): string {
@@ -52,36 +76,18 @@ function throwIfLatexError(svg: string): void {
 }
 
 export async function renderSvg(latex: string): Promise<string> {
-  const mathJax = await getMathJax();
-  const node = mathJax.tex2svg(latex, {
+  const mathJax = getMathJax();
+  const node = mathJax.document.convert(latex, {
     display: true,
     em: 16,
     ex: 8,
     containerWidth: 80
   });
 
-  const serialized = mathJax.startup.adaptor.serializeXML(node);
+  const serialized = mathJax.adaptor.outerHTML(node);
   const svg = getSvgFromMathJaxOutput(serialized);
 
   throwIfLatexError(svg);
 
   return svg;
-}
-
-export async function renderPng(latex: string): Promise<Buffer> {
-  const svg = await renderSvg(latex);
-  const padding = 20;
-
-  return sharp(Buffer.from(svg))
-    .resize({ height: 500 })
-    .flatten({ background: { r: 255, g: 255, b: 255 } })
-    .extend({
-      top: padding,
-      bottom: padding,
-      left: padding,
-      right: padding,
-      background: { r: 255, g: 255, b: 255, alpha: 1 }
-    })
-    .png()
-    .toBuffer();
 }
