@@ -10,10 +10,14 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "dev": "pnpm build && wrangler dev",
+    "dev:node": "pnpm build && node dist/http-server.js",
+    "start": "node dist/http-server.js",
     "deploy": "pnpm build && wrangler deploy"
   },
   "dependencies": {
-    "mathjax": "4.1.0"
+    "@mathjax/mathjax-newcm-font": "4.1.0",
+    "mathjax": "4.1.0",
+    "sharp": "^0.34.4"
   },
   "devDependencies": {
     "@types/node": "^24.3.0",

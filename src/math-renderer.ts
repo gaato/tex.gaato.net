@@ -1,94 +1,37 @@
-type MathJaxDocument = {
-  convert: (latex: string, options?: Record<string, unknown>) => unknown;
-};
-
 type MathJaxAdaptor = {
-  outerHTML: (node: unknown) => string;
+  serializeXML: (node: unknown) => string;
+  tags: (node: unknown, tagName: string) => unknown[];
 };
 
-type MathJaxContext = {
-  document: MathJaxDocument;
-  adaptor: MathJaxAdaptor;
+type MathJaxRuntime = {
+  startup: {
+    adaptor: MathJaxAdaptor;
+    promise: Promise<void>;
+  };
+  tex2svgPromise: (latex: string, options?: Record<string, unknown>) => Promise<unknown>;
 };
 
-type MathJaxGlobal = {
-  _: {
-    mathjax: {
-      mathjax: {
-        document: (html: string, options: Record<string, unknown>) => unknown;
-      };
+type MathJaxConfig = {
+  loader: {
+    paths: {
+      mathjax: string;
     };
-    input: {
-      tex_ts: {
-        TeX: new (options?: Record<string, unknown>) => unknown;
-      };
-    };
-    output: {
-      svg_ts: {
-        SVG: new (options?: Record<string, unknown>) => unknown;
-      };
-    };
-    adaptors?: {
-      liteAdaptor?: {
-        liteAdaptor?: (options?: Record<string, unknown>) => unknown;
-      };
-    };
-    handlers: {
-      html_ts: {
-        RegisterHTMLHandler: (adaptor: unknown) => void;
-      };
-    };
+    load: string[];
+    require: (file: string) => Promise<unknown>;
+  };
+  output: {
+    font: string;
+    fontCache: string;
   };
 };
 
-let mathJaxContextPromise: Promise<MathJaxContext> | null = null;
+const emSize = 16;
+const exSize = 8;
+const containerWidth = 80 * emSize;
 
-function getMathJaxGlobal(): MathJaxGlobal {
-  const mathJax = (globalThis as { MathJax?: unknown }).MathJax as MathJaxGlobal | undefined;
-  if (!mathJax) {
-    throw new Error('MathJax is unavailable.');
-  }
+let mathJaxRuntimePromise: Promise<MathJaxRuntime> | null = null;
 
-  return mathJax;
-}
-
-async function getMathJax(): Promise<MathJaxContext> {
-  if (!mathJaxContextPromise) {
-    mathJaxContextPromise = (async (): Promise<MathJaxContext> => {
-      await import('mathjax/tex-svg.js');
-      await import('mathjax/adaptors/liteDOM.js');
-
-      const mathJax = getMathJaxGlobal();
-      const liteAdaptor = mathJax._.adaptors?.liteAdaptor?.liteAdaptor;
-      const registerHtmlHandler = mathJax._.handlers.html_ts.RegisterHTMLHandler;
-
-      if (typeof liteAdaptor !== 'function') {
-        throw new Error('MathJax lite adaptor is unavailable.');
-      }
-
-      const adaptor = liteAdaptor();
-      registerHtmlHandler(adaptor);
-
-      const input = new mathJax._.input.tex_ts.TeX({
-        packages: ['base', 'ams']
-      });
-      const output = new mathJax._.output.svg_ts.SVG({
-        fontCache: 'none'
-      });
-
-      const document = mathJax._.mathjax.mathjax.document('', {
-        InputJax: input,
-        OutputJax: output
-      }) as MathJaxDocument;
-
-      return { document, adaptor: adaptor as MathJaxAdaptor };
-    })();
-  }
-
-  return mathJaxContextPromise;
-}
-
-function getSvgFromMathJaxOutput(output: string): string {
+function getSvgFromSerializedNode(output: string): string {
   const match = output.match(/<svg[^>]*>[\s\S]*<\/svg>/);
   if (!match) {
     throw new Error('MathJax output does not contain SVG.');
@@ -106,17 +49,51 @@ function throwIfLatexError(svg: string): void {
   throw new Error(`LaTeX error: ${title}`);
 }
 
+async function getMathJax(): Promise<MathJaxRuntime> {
+  if (!mathJaxRuntimePromise) {
+    mathJaxRuntimePromise = (async (): Promise<MathJaxRuntime> => {
+      const globalMathJax = globalThis as { MathJax?: MathJaxRuntime | MathJaxConfig };
+
+      if (!globalMathJax.MathJax || !('startup' in globalMathJax.MathJax)) {
+        globalMathJax.MathJax = {
+          loader: {
+            paths: {
+              mathjax: 'mathjax'
+            },
+            load: ['input/tex', 'output/svg', 'adaptors/liteDOM'],
+            require: (file: string) => import(file)
+          },
+          output: {
+            font: 'mathjax-newcm',
+            fontCache: 'none'
+          }
+        } satisfies MathJaxConfig;
+
+        await import('mathjax/startup.js');
+      }
+
+      const mathJax = globalMathJax.MathJax as MathJaxRuntime;
+      await mathJax.startup.promise;
+      return mathJax;
+    })();
+  }
+
+  return mathJaxRuntimePromise;
+}
+
 export async function renderSvg(latex: string): Promise<string> {
   const mathJax = await getMathJax();
-  const node = mathJax.document.convert(latex, {
+  const node = await mathJax.tex2svgPromise(latex, {
     display: true,
-    em: 16,
-    ex: 8,
-    containerWidth: 80
+    em: emSize,
+    ex: exSize,
+    containerWidth
   });
 
-  const serialized = mathJax.adaptor.outerHTML(node);
-  const svg = getSvgFromMathJaxOutput(serialized);
+  const serialized = mathJax.startup.adaptor.serializeXML(
+    mathJax.startup.adaptor.tags(node, 'svg')[0]
+  );
+  const svg = getSvgFromSerializedNode(serialized);
 
   throwIfLatexError(svg);
 
